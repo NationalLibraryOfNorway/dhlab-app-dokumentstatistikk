@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dokumentstatistikk-deployment
+  labels:
+    app: dokumentstatistikk
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dokumentstatistikk
+  template:
+    metadata:
+      labels:
+        app: dokumentstatistikk
+    spec:
+      containers:
+      - name: dokumentstatistikk
+        image: gcr.io/norwegian-language-bank/dokumentstatistikk:bc720115-9521-4895-84cc-20f36cf53186
+        command: [ "/bin/bash" ]
+        args: [ "-c", "streamlit run document_statistics.py --server.port 8501 --server.baseUrlPath /dokumentstatistikk --browser.gatherUsageStats=False"]
+        ports:
+        - containerPort: 8501
+        resources:
+          limits:
+            cpu: 250m
+            ephemeral-storage: 256Mi
+            memory: 512Mi
+          requests:
+            cpu: 250m
+            ephemeral-storage: 256Mi
+            memory: 512Mi
