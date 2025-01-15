@@ -3,7 +3,7 @@ dhlab==0.7.5
 streamlit >= 1.5.1
 streamlit_agraph
 matplotlib
-numpy
+numpy < 1.20
 requests
 IPython
 seaborn
