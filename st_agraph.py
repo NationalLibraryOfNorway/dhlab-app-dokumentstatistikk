@@ -1,15 +1,12 @@
 import streamlit as st
 import dhlab.nbtext as nb
 import gnl as gnl
-import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
 from PIL import Image
 import requests
-from streamlit_agraph import agraph, TripleStore, Config, Node, Edge
+from streamlit_agraph import agraph, Config, Node, Edge
 
-#url = "http://35.228.68.102.nip.io/galaxies/query"
-#url = "http://35.228.68.102/galaxies/query"
 url = "https://api.nb.no/dhlab/nb_ngram_galaxies/galaxies/query"
 
 colors =  ['#DC143C','#FFA500',
@@ -38,10 +35,10 @@ def create_nodes_and_edges_config(g, community_dict):
 
     config = Config(height=500,
                 nodeHighlightBehavior=True,
-                highlightColor="#F7A7A6", 
-                directed=True, 
+                highlightColor="#F7A7A6",
+                directed=True,
                 collapsible=True)
-    
+
     return nodes, edges, config
 
 
@@ -49,7 +46,7 @@ def create_nodes_and_edges_config(g, community_dict):
 def word_graph(word = None, cutoff = 20, corpus = 'all'):
     """ corpus = bok, avis or all"""
     params = {
-        'terms':word, 
+        'terms':word,
         'leaves':0,
         'limit':cutoff,
         'corpus':corpus,
@@ -58,9 +55,7 @@ def word_graph(word = None, cutoff = 20, corpus = 'all'):
     G = nx.DiGraph()
     edgelist = []
     if r.status_code == 200:
-        #graph = json.loads(result.text)
         graph = r.json()
-        #print(graph)
         nodes = graph['nodes']
         edges = graph['links']
         for edge in edges:
@@ -100,13 +95,13 @@ def galaxy(word, lang='nob', corpus = 'all', cutoff = 16):
         res = word_graph(word, corpus = corpus, cutoff = cutoff)
     else:
         res = nb.make_graph(word, lang = lang, cutoff = cutoff)
-   
+
     comm = gnl.community_dict(res)
     cliques = gnl.kcliques(res.to_undirected())
     return res, comm, cliques
 
 
-    
+
 st.set_page_config(layout="wide")
 
 image = Image.open("DHlab_logo_web_en_black.png")
@@ -118,24 +113,19 @@ st.title('Ordnettverk')
 
 st.sidebar.title('Parametre')
 
-cutoff = st.sidebar.number_input('Tilfang av noder', min_value = 12, max_value =24, value = 18, 
+cutoff = st.sidebar.number_input('Tilfang av noder', min_value = 12, max_value =24, value = 18,
                                  help="Angi et tall mellom 12 og 24 - jo større, jo fler noder -"
                                  " effektiv kun for norsk 'nob'")
 
-lang = st.sidebar.selectbox('Språk',['nob', 'eng', 'ger'], 
+lang = st.sidebar.selectbox('Språk',['nob', 'eng', 'ger'],
                             help="language code - "
                             "Data for English ('eng') and German ('ger') are fetched from Google trigrams 2013, see Google N-gram viewer https://books.google.com/ngrams")
-#fontsize = st.sidebar.number_input('Fontstørrelse', min_value = 0, max_value = 32, value = 12)
-#spread = st.sidebar.number_input('Spredning av grafen', min_value = 0.0, max_value = 2.6, value = 1.2)
-
-#centrality_size = st.sidebar.number_input('Størrelse på tabell', min_value = 10, max_value = 500, value = 12, 
-#                                          help="How many rows to show in table for sorted centrality")
 
 show_graph = st.sidebar.checkbox('Visualisering av graf', value = True, help="Visualize the graph")
 
 node_number = 50
 if not show_graph:
-    node_number = st.sidebar.number_input('Antall noder å vise ved tekstvisning', min_value = 5, value = 50, 
+    node_number = st.sidebar.number_input('Antall noder å vise ved tekstvisning', min_value = 5, value = 50,
                                      help="Specify number of nodes to show if graph is not visualized")
 
 
@@ -152,8 +142,6 @@ fig, ax = plt.subplots()
 if nx.is_empty(Graph):
     st.write("tom graf")
 elif show_graph:
-    #gnl.show_graph(Graph, spread = spread, fontsize = fontsize, show_borders = [])
-    #st.pyplot(fig)
     nodes, edges, config = create_nodes_and_edges_config(Graph, comm)
     agraph(nodes, edges, config)
 else:
@@ -164,7 +152,7 @@ else:
 
 
 
-    
+
 
 
 #------------------------------------------ Clustre -------------------------------###
@@ -182,13 +170,13 @@ if fra != "" and til != "":
     st.markdown(f"**{fra} - {til}** {pth[2]}: {', '.join(pth[3])}")
     pth = path(Graph.to_undirected(), source = fra, target = til)
     st.markdown(f"**{fra} - {til}** {pth[2]}: {', '.join(pth[3])}")
-    x = len(pth) 
+    x = len(pth)
     st.markdown("### Flere stier")
     pth = path(Graph, source = fra, target = til)
     st.markdown(f"**{fra} - {til}** {pth[2]}: {', '.join(pth[3])}")
     pth = path(Graph.to_undirected(), source = fra, target = til)
     st.markdown(f"**{fra} - {til}** {pth[2]}: {', '.join(pth[3])}")
-    
+
 #----------------------------------------- cent
 
 

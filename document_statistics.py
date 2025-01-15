@@ -5,25 +5,24 @@ import datetime
 import matplotlib.pyplot as plt
 from PIL import Image
 import requests
+import networkx as nx
 
-@st.cache_data( show_spinner = False)
+@st.cache_data(show_spinner = False)
 def get_df(frases, title='aftenposten', media='aviser', aggs='year'):
-    import requests
+
     querystring = " + ".join(['"'+frase+'"' for frase in frases])
     query = {
         'q':querystring,
         'size':1,
         'aggs':aggs,
         'filter':[f'mediatype:{media}', f'title:{title}']
-        #'filter':f"title:{title}"
-        #'filter':f"mediatype:{media}"
     }
     r = requests.get("https://api.nb.no/catalog/v1/items", params = query)
     aggs = r.json()['_embedded']['aggregations'][0]['buckets']
     return {x['key']:x['count'] for x in aggs}
 
 def get_data(frase, media='avis', title='jazznytt', aggs='year'):
-    import requests
+
     query = {
         'q':'"'+frase+'""',
         'size':1,
@@ -35,21 +34,20 @@ def get_data(frase, media='avis', title='jazznytt', aggs='year'):
     return r.json()
 
 def get_data_and(frases, title='aftenposten', media='avis', aggs='year'):
-    import requests
+
     querystring = " + ".join(['"'+frase+'"' for frase in frases])
     print(querystring)
     query = {
         'q':querystring,
         'size':1,
         'aggs':aggs,
-        #'filter':'mediatype:{mt}'.format(mt=media),
         'filter':'title:{title}'.format(title=title)
     }
     r = requests.get("https://api.nb.no/catalog/v1/items", params = query)
     return r.json()
 
 def get_df_pd(frase, media='bøker', aggs='year'):
-    import pandas as pd
+
     return pd.DataFrame.from_dict(get_df(frase, media=media, aggs=aggs), orient='index').sort_index()
 
 @st.cache_data( show_spinner = False)
@@ -61,7 +59,7 @@ def phrase_plots(phrase_sets, title='aftenposten', media = 'aviser', aggs='year'
     df.index = df.index.astype(int)
     df = df.sort_index()
     df['bins'] = pd.cut(df.index, range(fra, til, step), precision=0)
-    a = df.groupby('bins').sum()
+    a = df.groupby('bins', observed=False).sum()
     return a
 
 def graph_from_df(df, threshold = 100):
@@ -76,7 +74,7 @@ def graph_from_df(df, threshold = 100):
     return G
 
 
-    
+
 st.set_page_config(layout="wide")
 
 image = Image.open("DHlab_logo_web_en_black.png")
@@ -92,19 +90,20 @@ st.sidebar.markdown("""### Utvalg""")
 title = st.sidebar.text_input("Tittel på dokument, skriv * for å søke i alt", '*', help = "Tittel på avis, bok eller tidsskrift")
 steps = st.sidebar.number_input('Antall år for gruppering', min_value = 1, max_value = 20, value = 10, help="Angi et tall mellom 1  og 20")
 from_year, to_year = st.sidebar.slider(
-    'Angi periode', 
-    min_value = 1800, 
-    max_value = datetime.date.today().year, 
-    value = (1950, this_year), 
+    'Angi periode',
+    min_value = 1800,
+    max_value = datetime.date.today().year,
+    value = (1950, this_year),
     help="Årene det søkes i")
 mediatype = st.sidebar.selectbox("Velg medietype", ["aviser", "bøker", "tidsskrift"], index=0)
 
-#st.write(mediatype)
+
+
 st.sidebar.markdown("""### Visning""")
 hor = int(st.sidebar.number_input("Angi bredde  på figur 5 til 50", min_value=5, max_value=50, value=15))
 ver = int(st.sidebar.number_input("Angi høyde på figur 2 til 20", min_value = 2, max_value = 20, value = 5))
-rot = int(st.sidebar.number_input("Skråstill årstall - 0 til 90", min_value = 0, max_value=90, value = 20, help="0 er ingen skråstilling og 90 er vinkelrett"))                  
-           
+rot = int(st.sidebar.number_input("Skråstill årstall - 0 til 90", min_value = 0, max_value=90, value = 20, help="0 er ingen skråstilling og 90 er vinkelrett"))
+
 
 
 ## Main page #######################
@@ -114,10 +113,10 @@ frases = [[x.strip()] for x in frases.split(',')]
 
 ## Plot the results
 try:
-    fig, ax = plt.subplots() #nrows=2, ncols=2)
+    fig, ax = plt.subplots()
     a = phrase_plots(frases, title =title, fra=int(from_year), til= int(to_year), media=mediatype, step= int(steps), aggs= 'year')
     a.plot(ax = ax, kind='bar', figsize=(hor,ver), rot=rot)
     st.pyplot(fig)
-    
+
 except KeyError:
     st.write("Ingen data")
