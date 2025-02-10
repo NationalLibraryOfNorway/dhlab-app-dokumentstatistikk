@@ -5,7 +5,6 @@ import datetime
 import matplotlib.pyplot as plt
 from PIL import Image
 import requests
-import networkx as nx
 
 @st.cache_data(show_spinner = False)
 def get_df(frases, title='aftenposten', media='aviser', aggs='year'):
@@ -21,35 +20,6 @@ def get_df(frases, title='aftenposten', media='aviser', aggs='year'):
     aggs = r.json()['_embedded']['aggregations'][0]['buckets']
     return {x['key']:x['count'] for x in aggs}
 
-def get_data(frase, media='avis', title='jazznytt', aggs='year'):
-
-    query = {
-        'q':'"'+frase+'""',
-        'size':1,
-        'aggs':aggs,
-        'filter':'mediatype:{mt}'.format(mt=media),
-        'filter':'title:{title}'.format(title=title)
-    }
-    r = requests.get("https://api.nb.no/catalog/v1/items", params = query)
-    return r.json()
-
-def get_data_and(frases, title='aftenposten', media='avis', aggs='year'):
-
-    querystring = " + ".join(['"'+frase+'"' for frase in frases])
-    print(querystring)
-    query = {
-        'q':querystring,
-        'size':1,
-        'aggs':aggs,
-        'filter':'title:{title}'.format(title=title)
-    }
-    r = requests.get("https://api.nb.no/catalog/v1/items", params = query)
-    return r.json()
-
-def get_df_pd(frase, media='bøker', aggs='year'):
-
-    return pd.DataFrame.from_dict(get_df(frase, media=media, aggs=aggs), orient='index').sort_index()
-
 @st.cache_data( show_spinner = False)
 def phrase_plots(phrase_sets, title='aftenposten', media = 'aviser', aggs='year', fra = 1960, til = 2020, step=5):
     df_all = []
@@ -61,17 +31,6 @@ def phrase_plots(phrase_sets, title='aftenposten', media = 'aviser', aggs='year'
     df['bins'] = pd.cut(df.index, range(fra, til, step), precision=0)
     a = df.groupby('bins', observed=False).sum()
     return a
-
-def graph_from_df(df, threshold = 100):
-    edges =  []
-    normalizer = {(x, y): df.stack()[(x,x)]*df.stack()[(y,y)] for (x,y) in df.stack().index}
-    for (x, y) in df.stack().index:
-        if x != y:
-            if df.stack()[(x,y)] > threshold:
-                edges.append([x,y,df.stack()[(x,y)]/normalizer[(x,y)]])
-    G = nx.Graph()
-    G.add_weighted_edges_from(edges)
-    return G
 
 
 
