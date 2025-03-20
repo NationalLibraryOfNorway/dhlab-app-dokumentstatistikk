@@ -13,5 +13,8 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
         RUN timeout 5s streamlit hello; exit 0
 
         COPY document_statistics.py DHlab_logo_web_en_black.png  .
-        CMD streamlit run document_statistics.py --server.port ${PORT} --server.baseUrlPath /dokumentstatistikk
+        CMD streamlit run document_statistics.py        \
+            --server.port ${PORT}                       \
+            --server.baseUrlPath /dokumentstatistikk    \
+            --browser.gatherUsageStats false
 
