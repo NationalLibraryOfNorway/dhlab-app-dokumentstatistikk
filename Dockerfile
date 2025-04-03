@@ -9,6 +9,7 @@ FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
             --system                \
             --compile-bytecode
 
+        # Warm up caches
         RUN python -c 'import streamlit, pandas, dhlab, matplotlib, requests'
         RUN timeout 5s streamlit hello; exit 0
 
