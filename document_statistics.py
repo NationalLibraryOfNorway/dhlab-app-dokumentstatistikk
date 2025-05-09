@@ -1,13 +1,10 @@
-import pandas as pd
-import dhlab.nbtext as nb
 import streamlit as st
 import datetime
-import matplotlib.pyplot as plt
 from PIL import Image
-import requests
 
 @st.cache_data(show_spinner = False)
 def get_df(frases, title='aftenposten', media='aviser', aggs='year'):
+    import requests
 
     querystring = " + ".join(['"'+frase+'"' for frase in frases])
     query = {
@@ -22,6 +19,8 @@ def get_df(frases, title='aftenposten', media='aviser', aggs='year'):
 
 @st.cache_data( show_spinner = False)
 def phrase_plots(phrase_sets, title='aftenposten', media = 'aviser', aggs='year', fra = 1960, til = 2020, step=5):
+    import pandas as pd
+    import dhlab.nbtext as nb
     df_all = []
     for f in phrase_sets:
         df_all.append(nb.frame(get_df(f, title= title, media=media, aggs=aggs), ', '.join(f)))
@@ -70,8 +69,15 @@ st.title("Hvor mange dokument inneholder en frase eller et ord?")
 frases = st.text_input("List opp enkeltord eller fraser skilt med komma", "i alle dager, i forhold til")
 frases = [[x.strip()] for x in frases.split(',')]
 
+# Preemptively lazy-load
+import pandas as _
+import dhlab.nbtext as _
+import matplotlib.pyplot as _
+import requests as _
+
 ## Plot the results
 try:
+    import matplotlib.pyplot as plt
     fig, ax = plt.subplots()
     a = phrase_plots(frases, title =title, fra=int(from_year), til= int(to_year), media=mediatype, step= int(steps), aggs= 'year')
     a.plot(ax = ax, kind='bar', figsize=(hor,ver), rot=rot)
